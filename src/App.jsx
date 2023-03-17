@@ -1,33 +1,44 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import "./App.css";
-import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { Routes, Route, BrowserRouter, Link, Outlet } from "react-router-dom";
+import { sleep } from "./utils/helpers";
+
+const Home = lazy(() => import("./pages/HomePage"));
+const Main = lazy(() =>
+  import("./pages/Main").then((module) => {
+    return { default: module.Main };
+  })
+);
+const About = lazy(() => sleep(3000).then(() => import("./pages/about")));
 
 function App() {
-  // const baseUrl = import.meta.env.REACT_APP_BASE_URL;
+  const baseUrl = "/"; // import.meta.env.REACT_APP_BASE_URL;
 
   return (
-    <BrowserRouter style={{ height: "100vh" }}>
-      <div>
-        <Routes basename={baseUrl}>
-          <Route element={<PrivateRoutes />}>
-            {protectedRoutes.map((route, i) => {
-              return (
-                <Route
-                  key={i}
-                  path={`${baseUrl}${route.path}`}
-                  exact={route.exact}
-                  element={<route.component />}
-                />
-              );
-            })}
-          </Route>
-          {/* {!auth && <Route exact path={`${baseUrl}`} element={<LoginPage />} />}
-          {!auth && <Route exact path={`${baseUrl}/login`} element={<LoginPage />} />}
-          {!auth && <Route exact path={"*"} element={<Navigate to={`${baseUrl}/login`} />} />} */}
-        </Routes>
-      </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<NavWrapper />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/main" element={<Main />} />
+          <Route path="/about" element={<About />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
 
+const NavWrapper = () => {
+  return (
+    <>
+      <nav style={{ display: "flex", gap: "1rem" }}>
+        <Link to="/">Home</Link>
+        <Link to="/main">Main</Link>
+        <Link to="/about">About</Link>
+      </nav>
+      <Suspense fallback="Loading...">
+        <Outlet />
+      </Suspense>
+    </>
+  );
+};
 export default App;
